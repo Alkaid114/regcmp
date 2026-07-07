@@ -13,13 +13,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
+            target: x86_64-linux
             ext: ""
           - os: macos-latest
-            target: x86_64-apple-darwin
+            target: x86_64-macos
             ext: ""
           - os: windows-latest
-            target: x86_64-pc-windows-msvc
+            target: x86_64-windows
             ext: ".exe"
 
     steps:
@@ -31,15 +31,16 @@ jobs:
 
       - run: cargo build --release
 
-      - name: Upload binary
-        uses: actions/upload-artifact@v4
+      - run: |
+          mkdir -p dist
+          cp target/release/regcmp${{ matrix.ext }} dist/regcmp-${{ matrix.target }}${{ matrix.ext }}
+
+      - uses: actions/upload-artifact@v4
         with:
           name: regcmp-${{ matrix.target }}
-          path: target/release/regcmp${{ matrix.ext }}
-          if-no-files-found: error
+          path: dist/regcmp-${{ matrix.target }}${{ matrix.ext }}
 
   release:
-    name: Create Release
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -47,8 +48,14 @@ jobs:
 
     steps:
       - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: regcmp-*/
+          files: |
+            dist/regcmp-x86_64-linux
+            dist/regcmp-x86_64-macos
+            dist/regcmp-x86_64-windows.exe
           generate_release_notes: true
