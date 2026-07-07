@@ -5,6 +5,14 @@
 >
 > 这不是工程上的正则表达式（PCRE/PCRE2），而是《形式语言与自动机》中定义的原始正则表达式。
 
+## 在线使用WASM版
+
+浏览器直接用：[https://alkaid114.github.io/regcmp/](https://alkaid114.github.io/regcmp/)
+
+## 预编译二进制
+
+前往 [GitHub Releases](https://github.com/Alkaid114/regcmp/releases) 获取
+
 ## 构建
 
 ```bash
