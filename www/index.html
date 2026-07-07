@@ -19,16 +19,46 @@
   <p class="subtitle">形式正则表达式等价性判定工具</p>
 
   <div class="inputs">
-    <label>正则表达式 1
-      <input id="re1" value="(a|b)*" spellcheck="false">
-    </label>
-    <label>正则表达式 2
-      <input id="re2" value="(a*b*)*" spellcheck="false">
-    </label>
+    <div class="input-row">
+      <div class="input-head">
+        <span class="input-label">输入 1</span>
+        <select class="mode-select" data-idx="1">
+          <option value="re">正则表达式</option>
+          <option value="fsm">自动机</option>
+        </select>
+        <button class="file-btn" data-idx="1" style="display:none">选择文件</button>
+        <input type="file" class="file-input" data-idx="1" accept=".txt,.fsm">
+      </div>
+      <input id="input1-re" class="input-box" value="(a|b)*" spellcheck="false">
+      <textarea id="input1-fsm" class="input-box input-fsm" spellcheck="false" style="display:none" rows="6"># 接受全体字符串的 DFA
+start: q0
+accept: q0
+q0 a q0
+q0 b q0</textarea>
+    </div>
+    <div class="input-row">
+      <div class="input-head">
+        <span class="input-label">输入 2</span>
+        <select class="mode-select" data-idx="2">
+          <option value="re">正则表达式</option>
+          <option value="fsm">自动机</option>
+        </select>
+        <button class="file-btn" data-idx="2" style="display:none">选择文件</button>
+        <input type="file" class="file-input" data-idx="2" accept=".txt,.fsm">
+      </div>
+      <input id="input2-re" class="input-box" value="(a*b*)*" spellcheck="false">
+      <textarea id="input2-fsm" class="input-box input-fsm" spellcheck="false" style="display:none" rows="6"># 也接受全体字符串的 DFA
+start: q0
+accept: q0 q1
+q0 a q1
+q0 b q1
+q1 a q0
+q1 b q0</textarea>
+    </div>
   </div>
 
   <label class="vlabel">
-    <input id="verbose" type="checkbox" onchange="toggleVerbose()">
+    <input id="verbose" type="checkbox">
     <span>详细输出</span>
   </label>
 
@@ -38,38 +68,71 @@
 </div>
 
 <script type="module">
-import init, { compare, compare_verbose } from './pkg/regcmp_wasm.js';
+import init, { compare_typed, compare_typed_verbose } from './pkg/regcmp_wasm.js';
 
-function toggleVerbose() {
-  const v = document.getElementById('verbose').checked;
-  document.getElementById('detail').style.display = v ? '' : 'none';
-  if (!v) document.getElementById('detail').textContent = '';
-}
+document.querySelectorAll('.mode-select').forEach(sel => {
+  sel.addEventListener('change', () => {
+    const idx = sel.dataset.idx;
+    const isFsm = sel.value === 'fsm';
+    document.getElementById(`input${idx}-re`).style.display = isFsm ? 'none' : '';
+    document.getElementById(`input${idx}-fsm`).style.display = isFsm ? '' : 'none';
+    document.querySelector(`.file-btn[data-idx="${idx}"]`).style.display = isFsm ? '' : 'none';
+  });
+});
+
+document.querySelectorAll('.file-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const idx = btn.dataset.idx;
+    document.querySelector(`.file-input[data-idx="${idx}"]`).click();
+  });
+});
+
+document.querySelectorAll('.file-input').forEach(input => {
+  input.addEventListener('change', async () => {
+    const file = input.files[0];
+    if (!file) return;
+    const idx = input.dataset.idx;
+    try {
+      const text = await file.text();
+      document.getElementById(`input${idx}-fsm`).value = text;
+    } catch (e) {
+      alert('读取文件失败: ' + e);
+    }
+  });
+});
 
 async function run() {
   const btn = document.getElementById('btn');
   const out = document.getElementById('result');
   const detail = document.getElementById('detail');
-  const re1 = document.getElementById('re1').value;
-  const re2 = document.getElementById('re2').value;
   const verbose = document.getElementById('verbose').checked;
+
+  const mode1 = document.querySelector('.mode-select[data-idx="1"]').value;
+  const mode2 = document.querySelector('.mode-select[data-idx="2"]').value;
+  const val1 = mode1 === 're'
+    ? document.getElementById('input1-re').value
+    : document.getElementById('input1-fsm').value;
+  const val2 = mode2 === 're'
+    ? document.getElementById('input2-re').value
+    : document.getElementById('input2-fsm').value;
 
   btn.disabled = true;
   out.className = '';
   out.textContent = '计算中...';
   detail.textContent = '';
+  detail.style.display = 'none';
 
   try {
     await init();
     if (verbose) {
-      const result = compare_verbose(re1, re2);
+      const result = compare_typed_verbose(val1, mode1, val2, mode2);
       const lines = result.split('\n');
       out.textContent = lines[lines.length - 1];
       out.className = out.textContent === '等价' ? 'eq' : 'neq';
       detail.textContent = result.slice(0, result.lastIndexOf('\n'));
       detail.style.display = '';
     } else {
-      const result = compare(re1, re2);
+      const result = compare_typed(val1, mode1, val2, mode2);
       out.textContent = result;
       out.className = result === '等价' ? 'eq' : 'neq';
     }
@@ -82,7 +145,6 @@ async function run() {
 }
 
 window.run = run;
-window.toggleVerbose = toggleVerbose;
 </script>
 </body>
 </html>
