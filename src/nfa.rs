@@ -40,6 +40,22 @@ impl NFA {
         }
     }
 
+    pub fn display_string(&self) -> String {
+        let mut s = format!(
+            "NFA: {} 个状态, 开始: q{}, 接受: q{}",
+            self.state_count, self.start, self.accept
+        );
+        for state in 0..self.state_count {
+            for (sym, to) in &self.transitions[state] {
+                match sym {
+                    Some(c) => s.push_str(&format!("\n  q{} --{}--> q{}", state, c, to)),
+                    None => s.push_str(&format!("\n  q{} --ε--> q{}", state, to)),
+                }
+            }
+        }
+        s
+    }
+
     pub fn epsilon_closure(&self, states: &BTreeSet<usize>) -> BTreeSet<usize> {
         let mut closure = states.clone();
         let mut stack: Vec<usize> = states.iter().copied().collect();

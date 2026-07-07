@@ -7,7 +7,7 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
-regcmp = { version = "0.1.0", path = ".." }
+regcmp = { path = ".." }
 wasm-bindgen = "0.2.126"
 
 [package.metadata.wasm-pack.profile.release]

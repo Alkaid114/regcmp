@@ -3,7 +3,7 @@ members = ["www"]
 
 [package]
 name = "regcmp"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "比较两个形式正则表达式是否等价（形式语言与自动机课程）"
 license = "MIT"

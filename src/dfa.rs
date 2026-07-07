@@ -128,6 +128,29 @@ impl DFA {
         }
     }
 
+    pub fn display_string(&self) -> String {
+        let mut s = String::new();
+        let mut acc: Vec<_> = self.accept_states.iter().copied().collect();
+        acc.sort();
+        s.push_str(&format!(
+            "DFA: {} 个状态, 开始: q{}, 接受: {{",
+            self.state_count, self.start
+        ));
+        for (i, st) in acc.iter().enumerate() {
+            if i > 0 {
+                s.push_str(", ");
+            }
+            s.push_str(&format!("q{}", st));
+        }
+        s.push('}');
+        for st in 0..self.state_count {
+            for (&c, &to) in &self.transitions[st] {
+                s.push_str(&format!("\n  q{} --{}--> q{}", st, c, to));
+            }
+        }
+        s
+    }
+
     pub fn minimize(&self) -> DFA {
         let accepting: BTreeSet<usize> = self.accept_states.clone();
         let non_accepting: BTreeSet<usize> = (0..self.state_count)

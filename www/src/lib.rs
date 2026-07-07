@@ -8,3 +8,8 @@ pub fn compare(regex1: &str, regex2: &str) -> String {
         Err(e) => format!("错误: {}", e),
     }
 }
+
+#[wasm_bindgen]
+pub fn compare_verbose(regex1: &str, regex2: &str) -> String {
+    regcmp::compare_verbose(regex1, regex2)
+}

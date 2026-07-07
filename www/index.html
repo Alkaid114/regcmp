@@ -20,28 +20,52 @@
     </label>
   </div>
 
+  <label class="vlabel">
+    <input id="verbose" type="checkbox" onchange="toggleVerbose()">
+    <span>详细输出</span>
+  </label>
+
   <button id="btn" onclick="run()">比较</button>
   <p id="result"></p>
+  <pre id="detail" style="display:none"></pre>
 </div>
 
 <script type="module">
-import init, { compare } from './pkg/regcmp_wasm.js';
+import init, { compare, compare_verbose } from './pkg/regcmp_wasm.js';
+
+function toggleVerbose() {
+  const v = document.getElementById('verbose').checked;
+  document.getElementById('detail').style.display = v ? '' : 'none';
+  if (!v) document.getElementById('detail').textContent = '';
+}
 
 async function run() {
   const btn = document.getElementById('btn');
   const out = document.getElementById('result');
+  const detail = document.getElementById('detail');
   const re1 = document.getElementById('re1').value;
   const re2 = document.getElementById('re2').value;
+  const verbose = document.getElementById('verbose').checked;
 
   btn.disabled = true;
   out.className = '';
   out.textContent = '计算中...';
+  detail.textContent = '';
 
   try {
     await init();
-    const result = compare(re1, re2);
-    out.textContent = result;
-    out.className = result === '等价' ? 'eq' : 'neq';
+    if (verbose) {
+      const result = compare_verbose(re1, re2);
+      const lines = result.split('\n');
+      out.textContent = lines[lines.length - 1];
+      out.className = out.textContent === '等价' ? 'eq' : 'neq';
+      detail.textContent = result.slice(0, result.lastIndexOf('\n'));
+      detail.style.display = '';
+    } else {
+      const result = compare(re1, re2);
+      out.textContent = result;
+      out.className = result === '等价' ? 'eq' : 'neq';
+    }
   } catch (e) {
     out.textContent = '运行时错误: ' + e;
     out.className = 'neq';
@@ -51,6 +75,7 @@ async function run() {
 }
 
 window.run = run;
+window.toggleVerbose = toggleVerbose;
 </script>
 </body>
 </html>
