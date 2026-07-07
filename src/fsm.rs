@@ -197,12 +197,20 @@ pub fn parse_str(content: &str) -> Result<NFA, String> {
 
     let start = start.unwrap_or(0);
 
+    let mut state_names: Vec<String> = vec![String::new(); next_id];
+    for (name, &id) in &state_map {
+        state_names[id] = name.clone();
+    }
+
     let accept = if accept_names.is_empty() {
         next_id
+    } else if accept_names.len() == 1 {
+        state_map[&accept_names[0]]
     } else {
         let a = next_id;
         next_id += 1;
         transitions.push(Vec::new());
+        state_names.push(format!("_q{}", a));
         for name in &accept_names {
             if let Some(&id) = state_map.get(name) {
                 transitions[id].push((None, a));
@@ -216,5 +224,6 @@ pub fn parse_str(content: &str) -> Result<NFA, String> {
         accept,
         transitions,
         state_count: next_id,
+        state_names,
     })
 }

@@ -8,6 +8,7 @@ pub struct NFA {
     pub accept: usize,
     pub transitions: Vec<Vec<(Option<char>, usize)>>,
     pub state_count: usize,
+    pub state_names: Vec<String>,
 }
 
 impl NFA {
@@ -17,24 +18,37 @@ impl NFA {
             next_state: 0,
         };
         let frag = builder.build_fragment(re);
+        let state_names: Vec<String> = (0..builder.next_state).map(|i| format!("q{}", i)).collect();
         NFA {
             start: frag.start,
             accept: frag.accept,
             transitions: builder.transitions,
             state_count: builder.next_state,
+            state_names,
         }
+    }
+
+    fn state_name(&self, id: usize) -> &str {
+        self.state_names.get(id).map_or("?", |s| s.as_str())
     }
 
     pub fn dump(&self) {
         println!(
-            "NFA: {} 个状态, 开始: q{}, 接受: q{}",
-            self.state_count, self.start, self.accept
+            "NFA: {} 个状态, 开始: {}, 接受: {}",
+            self.state_count,
+            self.state_name(self.start),
+            self.state_name(self.accept),
         );
         for s in 0..self.state_count {
             for (sym, to) in &self.transitions[s] {
                 match sym {
-                    Some(c) => println!("  q{} --{}--> q{}", s, c, to),
-                    None => println!("  q{} --ε--> q{}", s, to),
+                    Some(c) => println!(
+                        "  {} --{}--> {}",
+                        self.state_name(s),
+                        c,
+                        self.state_name(*to)
+                    ),
+                    None => println!("  {} --ε--> {}", self.state_name(s), self.state_name(*to)),
                 }
             }
         }
@@ -42,14 +56,25 @@ impl NFA {
 
     pub fn display_string(&self) -> String {
         let mut s = format!(
-            "NFA: {} 个状态, 开始: q{}, 接受: q{}",
-            self.state_count, self.start, self.accept
+            "NFA: {} 个状态, 开始: {}, 接受: {}",
+            self.state_count,
+            self.state_name(self.start),
+            self.state_name(self.accept),
         );
         for state in 0..self.state_count {
             for (sym, to) in &self.transitions[state] {
                 match sym {
-                    Some(c) => s.push_str(&format!("\n  q{} --{}--> q{}", state, c, to)),
-                    None => s.push_str(&format!("\n  q{} --ε--> q{}", state, to)),
+                    Some(c) => s.push_str(&format!(
+                        "\n  {} --{}--> {}",
+                        self.state_name(state),
+                        c,
+                        self.state_name(*to)
+                    )),
+                    None => s.push_str(&format!(
+                        "\n  {} --ε--> {}",
+                        self.state_name(state),
+                        self.state_name(*to)
+                    )),
                 }
             }
         }
