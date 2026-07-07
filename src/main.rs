@@ -1,4 +1,5 @@
 use clap::Parser;
+use colored::Colorize;
 
 mod dfa;
 mod nfa;
@@ -23,7 +24,7 @@ fn main() {
     let re1 = match parser::Parser::parse(&cli.regex1) {
         Ok(re) => re,
         Err(e) => {
-            eprintln!("解析正则表达式1失败: {}", e);
+            print_error("正则表达式1", &cli.regex1, &e);
             std::process::exit(1);
         }
     };
@@ -31,20 +32,20 @@ fn main() {
     let re2 = match parser::Parser::parse(&cli.regex2) {
         Ok(re) => re,
         Err(e) => {
-            eprintln!("解析正则表达式2失败: {}", e);
+            print_error("正则表达式2", &cli.regex2, &e);
             std::process::exit(1);
         }
     };
 
     if cli.verbose {
-        println!("=== 正则表达式1 ===");
-        println!("输入: {}", cli.regex1);
-        println!("AST: {}", re1);
+        println!("{}", "== 正则表达式1 ==".cyan().bold());
+        println!("输入: {}", cli.regex1.yellow());
+        println!("AST : {}", re1.to_string().yellow());
         println!();
 
-        println!("=== 正则表达式2 ===");
-        println!("输入: {}", cli.regex2);
-        println!("AST: {}", re2);
+        println!("{}", "== 正则表达式2 ==".cyan().bold());
+        println!("输入: {}", cli.regex2.yellow());
+        println!("AST : {}", re2.to_string().yellow());
         println!();
     }
 
@@ -63,15 +64,15 @@ fn main() {
     alphabet.sort();
 
     if cli.verbose {
-        println!("=== 字母表 ===");
+        println!("{}", "== 字母表 ==".cyan().bold());
         println!("{:?}", alphabet);
         println!();
 
-        println!("=== NFA1 ===");
+        println!("{}", "== NFA1 ==".cyan().bold());
         nfa1.dump();
         println!();
 
-        println!("=== NFA2 ===");
+        println!("{}", "== NFA2 ==".cyan().bold());
         nfa2.dump();
         println!();
     }
@@ -80,11 +81,11 @@ fn main() {
     let dfa2 = dfa::DFA::from_nfa(&nfa2, &alphabet);
 
     if cli.verbose {
-        println!("=== DFA1 ===");
+        println!("{}", "== DFA1 ==".cyan().bold());
         dfa1.dump();
         println!();
 
-        println!("=== DFA2 ===");
+        println!("{}", "== DFA2 ==".cyan().bold());
         dfa2.dump();
         println!();
     }
@@ -93,11 +94,11 @@ fn main() {
     let min2 = dfa2.minimize();
 
     if cli.verbose {
-        println!("=== 最小化DFA1 ===");
+        println!("{}", "== 最小化DFA1 ==".cyan().bold());
         min1.dump();
         println!();
 
-        println!("=== 最小化DFA2 ===");
+        println!("{}", "== 最小化DFA2 ==".cyan().bold());
         min2.dump();
         println!();
     }
@@ -105,12 +106,43 @@ fn main() {
     let equivalent = min1.is_equivalent_to(&min2);
 
     if cli.verbose {
-        println!("=== 结论 ===");
+        println!("{}", "== 结论 ==".cyan().bold());
     }
 
     if equivalent {
-        println!("等价");
+        println!("{}", "等价".green().bold());
     } else {
-        println!("不等价");
+        println!("{}", "不等价".red().bold());
     }
+}
+
+fn print_error(label: &str, input: &str, err: &parser::ParseError) {
+    let pos = err.pos.min(input.len());
+
+    let line_start = input[..pos].rfind('\n').map_or(0, |i| i + 1);
+    let line_end = input[pos..]
+        .find('\n')
+        .map_or(input.len(), |i| pos + i);
+    let line_content = &input[line_start..line_end];
+    let col = pos - line_start;
+    let line_no = input[..pos].chars().filter(|&c| c == '\n').count() + 1;
+
+    let pipe = "|".blue();
+    let pad = " ".repeat(line_no.to_string().len());
+
+    eprintln!(
+        "{}: {}",
+        "错误".red().bold(),
+        format!("{} 解析失败: {}", label, err.message).red()
+    );
+    eprintln!("{}", format!("{pad} {pipe}").blue());
+    eprintln!(
+        "{}",
+        format!("{line_no} {pipe} {line_content}").blue()
+    );
+    eprintln!(
+        "{} {}",
+        format!("{pad} {pipe}").blue(),
+        format!("{}{}", " ".repeat(col), "^").red().bold()
+    );
 }
