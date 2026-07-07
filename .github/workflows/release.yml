@@ -13,13 +13,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: x86_64-linux
+            target: x86_64-unknown-linux-gnu
             ext: ""
           - os: macos-latest
-            target: x86_64-macos
+            target: x86_64-apple-darwin
             ext: ""
           - os: windows-latest
-            target: x86_64-windows
+            target: x86_64-pc-windows-msvc
             ext: ".exe"
 
     steps:
@@ -55,7 +55,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/regcmp-x86_64-linux
-            dist/regcmp-x86_64-macos
-            dist/regcmp-x86_64-windows.exe
+            dist/regcmp-x86_64-unknown-linux-gnu
+            dist/regcmp-x86_64-apple-darwin
+            dist/regcmp-x86_64-pc-windows-msvc.exe
           generate_release_notes: true
