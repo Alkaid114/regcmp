@@ -1,11 +1,7 @@
 #![allow(clippy::upper_case_acronyms)]
 use clap::Parser;
 use colored::Colorize;
-
-mod dfa;
-mod nfa;
-mod parser;
-mod regex;
+use regcmp::{dfa, nfa, parser};
 
 #[derive(Parser)]
 #[command(name = "regcmp", about = "比较两个形式正则表达式是否等价")]
