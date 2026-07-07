@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>regcmp — 正则表达式等价性判定</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <h1>regcmp</h1>
+  <p class="subtitle">形式正则表达式等价性判定工具</p>
+
+  <div class="inputs">
+    <label>正则表达式 1
+      <input id="re1" value="(a|b)*" spellcheck="false">
+    </label>
+    <label>正则表达式 2
+      <input id="re2" value="(a*b*)*" spellcheck="false">
+    </label>
+  </div>
+
+  <button id="btn" onclick="run()">比较</button>
+  <p id="result"></p>
+</div>
+
+<script type="module">
+import init, { compare } from './pkg/regcmp_wasm.js';
+
+async function run() {
+  const btn = document.getElementById('btn');
+  const out = document.getElementById('result');
+  const re1 = document.getElementById('re1').value;
+  const re2 = document.getElementById('re2').value;
+
+  btn.disabled = true;
+  out.className = '';
+  out.textContent = '计算中...';
+
+  try {
+    await init();
+    const result = compare(re1, re2);
+    out.textContent = result;
+    out.className = result === '等价' ? 'eq' : 'neq';
+  } catch (e) {
+    out.textContent = '运行时错误: ' + e;
+    out.className = 'neq';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+window.run = run;
+</script>
+</body>
+</html>
