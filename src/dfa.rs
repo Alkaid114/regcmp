@@ -111,19 +111,19 @@ impl DFA {
         let mut acc: Vec<_> = self.accept_states.iter().copied().collect();
         acc.sort();
         print!(
-            "DFA: {} 个状态, 开始: {}, 接受: {{",
+            "DFA: {} 个状态, 开始: q{}, 接受: {{",
             self.state_count, self.start
         );
         for (i, s) in acc.iter().enumerate() {
             if i > 0 {
                 print!(", ");
             }
-            print!("{}", s);
+            print!("q{}", s);
         }
         println!("}}");
         for s in 0..self.state_count {
             for (&c, &to) in &self.transitions[s] {
-                println!("  {} --{}--> {}", s, c, to);
+                println!("  q{} --{}--> q{}", s, c, to);
             }
         }
     }
@@ -303,8 +303,7 @@ impl DFA {
             return self.clone();
         }
 
-        let mut trans: Vec<BTreeMap<char, usize>> =
-            self.transitions.to_vec();
+        let mut trans: Vec<BTreeMap<char, usize>> = self.transitions.to_vec();
         let sink = trans.len();
 
         trans.push(BTreeMap::new());

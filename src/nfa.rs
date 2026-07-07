@@ -27,14 +27,14 @@ impl NFA {
 
     pub fn dump(&self) {
         println!(
-            "NFA: {} 个状态, 开始: {}, 接受: {}",
+            "NFA: {} 个状态, 开始: q{}, 接受: q{}",
             self.state_count, self.start, self.accept
         );
         for s in 0..self.state_count {
             for (sym, to) in &self.transitions[s] {
                 match sym {
-                    Some(c) => println!("  {} --{}--> {}", s, c, to),
-                    None => println!("  {} --ε--> {}", s, to),
+                    Some(c) => println!("  q{} --{}--> q{}", s, c, to),
+                    None => println!("  q{} --ε--> q{}", s, to),
                 }
             }
         }
