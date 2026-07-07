@@ -1,3 +1,4 @@
+mod dfa;
 mod nfa;
 mod parser;
 mod regex;
