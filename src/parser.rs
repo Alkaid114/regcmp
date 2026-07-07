@@ -24,7 +24,7 @@ pub enum Token {
     Whitespace,
 }
 
-struct Parser {
+pub struct Parser {
     tokens: Vec<Token>,
     pos: usize,
 }

@@ -109,6 +109,27 @@ impl DFA {
         }
     }
 
+    pub fn dump(&self) {
+        let mut acc: Vec<_> = self.accept_states.iter().copied().collect();
+        acc.sort();
+        print!(
+            "DFA: {} 个状态, 开始: {}, 接受: {{",
+            self.state_count, self.start
+        );
+        for (i, s) in acc.iter().enumerate() {
+            if i > 0 {
+                print!(", ");
+            }
+            print!("{}", s);
+        }
+        println!("}}");
+        for s in 0..self.state_count {
+            for (&c, &to) in &self.transitions[s] {
+                println!("  {} --{}--> {}", s, c, to);
+            }
+        }
+    }
+
     pub fn minimize(&self) -> DFA {
         let accepting: BTreeSet<usize> = self.accept_states.clone();
         let non_accepting: BTreeSet<usize> = (0..self.state_count)

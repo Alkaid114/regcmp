@@ -25,6 +25,21 @@ impl NFA {
         }
     }
 
+    pub fn dump(&self) {
+        println!(
+            "NFA: {} 个状态, 开始: {}, 接受: {}",
+            self.state_count, self.start, self.accept
+        );
+        for s in 0..self.state_count {
+            for (sym, to) in &self.transitions[s] {
+                match sym {
+                    Some(c) => println!("  {} --{}--> {}", s, c, to),
+                    None => println!("  {} --ε--> {}", s, to),
+                }
+            }
+        }
+    }
+
     pub fn epsilon_closure(&self, states: &BTreeSet<usize>) -> BTreeSet<usize> {
         let mut closure = states.clone();
         let mut stack: Vec<usize> = states.iter().copied().collect();
