@@ -126,10 +126,12 @@ async function run() {
     await init();
     if (verbose) {
       const result = compare_typed_verbose(val1, mode1, val2, mode2);
-      const lines = result.split('\n');
+      const trimmed = result.trimEnd();
+      const lines = trimmed.split('\n');
       out.textContent = lines[lines.length - 1];
       out.className = out.textContent === '等价' ? 'eq' : 'neq';
-      detail.textContent = result.slice(0, result.lastIndexOf('\n'));
+      const lastNl = trimmed.lastIndexOf('\n');
+      detail.textContent = lastNl >= 0 ? trimmed.slice(0, lastNl) : '';
       detail.style.display = '';
     } else {
       const result = compare_typed(val1, mode1, val2, mode2);
