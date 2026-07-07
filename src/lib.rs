@@ -1,73 +1,74 @@
 #![allow(clippy::upper_case_acronyms)]
 
 pub mod dfa;
+pub mod fsm;
 pub mod nfa;
 pub mod parser;
 pub mod regex;
 
-pub fn compare(regex1: &str, regex2: &str) -> Result<bool, String> {
-    let re1 = parser::Parser::parse(regex1).map_err(|e| e.message)?;
-    let re2 = parser::Parser::parse(regex2).map_err(|e| e.message)?;
+use std::path::Path;
 
-    let nfa1 = nfa::NFA::from_regex(&re1);
-    let nfa2 = nfa::NFA::from_regex(&re2);
-
-    let mut alphabet = Vec::new();
-    re1.collect_alphabet(&mut alphabet);
-    let mut alpha2 = Vec::new();
-    re2.collect_alphabet(&mut alpha2);
-    for c in alpha2 {
-        if !alphabet.contains(&c) {
-            alphabet.push(c);
+fn merge_alphabet(a: &[char], b: &[char]) -> Vec<char> {
+    let mut set: Vec<char> = a.to_vec();
+    for &c in b {
+        if !set.contains(&c) {
+            set.push(c);
         }
     }
-    alphabet.sort();
-
-    let dfa1 = dfa::DFA::from_nfa(&nfa1, &alphabet);
-    let dfa2 = dfa::DFA::from_nfa(&nfa2, &alphabet);
-
-    let min1 = dfa1.minimize();
-    let min2 = dfa2.minimize();
-
-    Ok(min1.is_equivalent_to(&min2))
+    set.sort();
+    set
 }
 
-pub fn compare_verbose(regex1: &str, regex2: &str) -> String {
-    let re1 = match parser::Parser::parse(regex1) {
-        Ok(re) => re,
-        Err(e) => return format!("错误: 正则表达式1 解析失败: {}", e.message),
+fn compare_nfas(nfa1: &nfa::NFA, nfa2: &nfa::NFA, alphabet: &[char]) -> bool {
+    let dfa1 = dfa::DFA::from_nfa(nfa1, alphabet);
+    let dfa2 = dfa::DFA::from_nfa(nfa2, alphabet);
+    let min1 = dfa1.minimize();
+    let min2 = dfa2.minimize();
+    min1.is_equivalent_to(&min2)
+}
+
+fn parse_input(input: &str) -> Result<nfa::NFA, String> {
+    if Path::new(input).is_file() {
+        fsm::parse_file(input)
+    } else {
+        let re = parser::Parser::parse(input).map_err(|e| e.message)?;
+        Ok(nfa::NFA::from_regex(&re))
+    }
+}
+
+fn input_label(input: &str) -> &str {
+    if Path::new(input).is_file() {
+        "文件"
+    } else {
+        "正则表达式"
+    }
+}
+
+pub fn compare(input1: &str, input2: &str) -> Result<bool, String> {
+    let nfa1 = parse_input(input1)?;
+    let nfa2 = parse_input(input2)?;
+    let alphabet = merge_alphabet(&nfa1.collect_alphabet(), &nfa2.collect_alphabet());
+    Ok(compare_nfas(&nfa1, &nfa2, &alphabet))
+}
+
+pub fn compare_verbose(input1: &str, input2: &str) -> String {
+    let nfa1 = match parse_input(input1) {
+        Ok(nfa) => nfa,
+        Err(e) => return format!("错误: {}1 解析失败: {}", input_label(input1), e),
     };
-    let re2 = match parser::Parser::parse(regex2) {
-        Ok(re) => re,
-        Err(e) => return format!("错误: 正则表达式2 解析失败: {}", e.message),
+    let nfa2 = match parse_input(input2) {
+        Ok(nfa) => nfa,
+        Err(e) => return format!("错误: {}2 解析失败: {}", input_label(input2), e),
     };
 
+    let alphabet = merge_alphabet(&nfa1.collect_alphabet(), &nfa2.collect_alphabet());
     let mut out = String::new();
 
-    out.push_str(&format!(
-        "== 正则表达式1 ==\n输入: {}\nAST : {}\n\n",
-        regex1, re1
-    ));
+    let label1 = input_label(input1);
+    let label2 = input_label(input2);
 
-    out.push_str(&format!(
-        "== 正则表达式2 ==\n输入: {}\nAST : {}\n\n",
-        regex2, re2
-    ));
-
-    let nfa1 = nfa::NFA::from_regex(&re1);
-    let nfa2 = nfa::NFA::from_regex(&re2);
-
-    let mut alphabet = Vec::new();
-    re1.collect_alphabet(&mut alphabet);
-    let mut alpha2 = Vec::new();
-    re2.collect_alphabet(&mut alpha2);
-    for c in alpha2 {
-        if !alphabet.contains(&c) {
-            alphabet.push(c);
-        }
-    }
-    alphabet.sort();
-
+    out.push_str(&format!("== {}1 ==\n输入: {}\n\n", label1, input1));
+    out.push_str(&format!("== {}2 ==\n输入: {}\n\n", label2, input2));
     out.push_str(&format!("== 字母表 ==\n{:?}\n\n", alphabet));
 
     out.push_str(&format!("== NFA1 ==\n{}\n\n", nfa1.display_string()));

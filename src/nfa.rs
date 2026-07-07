@@ -68,6 +68,20 @@ impl NFA {
         }
         closure
     }
+
+    pub fn collect_alphabet(&self) -> Vec<char> {
+        let mut set = BTreeSet::new();
+        for t in &self.transitions {
+            for (sym, _) in t {
+                if let Some(c) = sym {
+                    set.insert(*c);
+                }
+            }
+        }
+        let mut chars: Vec<char> = set.into_iter().collect();
+        chars.sort();
+        chars
+    }
 }
 
 struct Fragment {
