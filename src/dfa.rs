@@ -82,18 +82,16 @@ impl DFA {
         }
 
         let sink = dfa_transitions.len();
-        let needs_sink = dfa_transitions
-            .iter()
-            .any(|t| t.len() < alphabet.len());
+        let needs_sink = dfa_transitions.iter().any(|t| t.len() < alphabet.len());
 
         if needs_sink {
             dfa_transitions.push(BTreeMap::new());
             for &c in alphabet {
                 dfa_transitions[sink].insert(c, sink);
             }
-            for state_id in 0..dfa_transitions.len() {
+            for t in &mut dfa_transitions {
                 for &c in alphabet {
-                    dfa_transitions[state_id].entry(c).or_insert(sink);
+                    t.entry(c).or_insert(sink);
                 }
             }
         }
@@ -175,17 +173,14 @@ impl DFA {
 
             let splitter_states = blocks[splitter_block].clone();
 
-            let mut affected: BTreeMap<usize, (BTreeSet<usize>, BTreeSet<usize>)> =
-                BTreeMap::new();
+            let mut affected: BTreeMap<usize, (BTreeSet<usize>, BTreeSet<usize>)> = BTreeMap::new();
 
-            for state in 0..self.state_count {
-                let blk = state_block[state];
+            for (state, &blk) in state_block.iter().enumerate() {
                 if blk >= blocks.len() || blocks[blk].is_empty() {
                     continue;
                 }
                 let target = self.transitions[state].get(&c).copied();
-                let in_splitter =
-                    target.map_or(false, |t| splitter_states.contains(&t));
+                let in_splitter = target.is_some_and(|t| splitter_states.contains(&t));
 
                 let entry = affected.entry(blk).or_default();
                 if in_splitter {
@@ -302,17 +297,14 @@ impl DFA {
     }
 
     fn complete(&self, alphabet: &[char]) -> DFA {
-        let needs_sink = self
-            .transitions
-            .iter()
-            .any(|t| t.len() < alphabet.len());
+        let needs_sink = self.transitions.iter().any(|t| t.len() < alphabet.len());
 
         if !needs_sink && self.alphabet == alphabet {
             return self.clone();
         }
 
         let mut trans: Vec<BTreeMap<char, usize>> =
-            self.transitions.iter().map(|t| t.clone()).collect();
+            self.transitions.to_vec();
         let sink = trans.len();
 
         trans.push(BTreeMap::new());
@@ -320,9 +312,9 @@ impl DFA {
             trans[sink].insert(c, sink);
         }
 
-        for state_id in 0..=sink {
+        for t in &mut trans {
             for &c in alphabet {
-                trans[state_id].entry(c).or_insert(sink);
+                t.entry(c).or_insert(sink);
             }
         }
 

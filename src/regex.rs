@@ -26,11 +26,10 @@ impl fmt::Display for Regex {
 impl Regex {
     pub fn collect_alphabet(&self, set: &mut Vec<char>) {
         match self {
-            Regex::Char(c) => {
-                if !set.contains(c) {
+            Regex::Char(c)
+                if !set.contains(c) => {
                     set.push(*c);
                 }
-            }
             Regex::Union(l, r) | Regex::Concat(l, r) => {
                 l.collect_alphabet(set);
                 r.collect_alphabet(set);

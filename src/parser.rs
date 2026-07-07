@@ -54,10 +54,7 @@ impl Parser {
                 }
                 Err(()) => {
                     let pos = lex.span().start;
-                    let ch = input[pos..]
-                        .chars()
-                        .next()
-                        .unwrap_or('?');
+                    let ch = input[pos..].chars().next().unwrap_or('?');
                     return Err(ParseError {
                         message: format!("无效字符 '{}'", ch),
                         pos,
@@ -109,7 +106,7 @@ impl Parser {
 
     fn parse_term(&mut self) -> Result<Regex, ParseError> {
         let mut left = self.parse_factor()?;
-        while self.peek().map_or(false, |t| {
+        while self.peek().is_some_and(|t| {
             matches!(
                 t,
                 Token::Char(_) | Token::EmptySet | Token::EmptyStr | Token::LParen

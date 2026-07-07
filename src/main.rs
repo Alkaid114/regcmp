@@ -1,3 +1,4 @@
+#![allow(clippy::upper_case_acronyms)]
 use clap::Parser;
 use colored::Colorize;
 
@@ -120,9 +121,7 @@ fn print_error(label: &str, input: &str, err: &parser::ParseError) {
     let pos = err.pos.min(input.len());
 
     let line_start = input[..pos].rfind('\n').map_or(0, |i| i + 1);
-    let line_end = input[pos..]
-        .find('\n')
-        .map_or(input.len(), |i| pos + i);
+    let line_end = input[pos..].find('\n').map_or(input.len(), |i| pos + i);
     let line_content = &input[line_start..line_end];
     let col = pos - line_start;
     let line_no = input[..pos].chars().filter(|&c| c == '\n').count() + 1;
@@ -136,10 +135,7 @@ fn print_error(label: &str, input: &str, err: &parser::ParseError) {
         format!("{} 解析失败: {}", label, err.message).red()
     );
     eprintln!("{}", format!("{pad} {pipe}").blue());
-    eprintln!(
-        "{}",
-        format!("{line_no} {pipe} {line_content}").blue()
-    );
+    eprintln!("{}", format!("{line_no} {pipe} {line_content}").blue());
     eprintln!(
         "{} {}",
         format!("{pad} {pipe}").blue(),
